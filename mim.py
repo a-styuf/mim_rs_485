@@ -12,7 +12,7 @@ class MimRS485Device(serial.Serial):
         #
         self.serial_numbers = kw.get("serial_numbers", [])  # это лист возможных серийников!!! (не строка)
         self.baudrate = kw.get("baudrate", 921600)
-        self.timeout = kw.get("timeout", 0.002)
+        self.timeout = kw.get("timeout", 0.005)
         self.port = kw.get('port', "COM0")
         self.debug = kw.get('debug', True)
         self.addr = kw.get("addr", 0x00)
@@ -20,7 +20,7 @@ class MimRS485Device(serial.Serial):
         #
         self.crc_calculator = Calculator(Crc8.CCITT)
         self.row_data = b""
-        self.read_timeout = 0.100
+        self.read_timeout = 0.200
         self.request_num = 0
         self.crc_check = True
 
@@ -161,7 +161,6 @@ class MimRS485Device(serial.Serial):
 
     def thread_function(self):
         #try:
-        id_var = 0
         while True:
             nansw = 0
             if self.is_open is True:
@@ -173,8 +172,9 @@ class MimRS485Device(serial.Serial):
                         packet_to_send = self.com_queue.pop(0)
                         data_to_send = packet_to_send
                     if self.in_waiting:
-                        self._print("In input buffer %d bytes" % self.in_waiting)
-                        self.read(self.in_waiting)
+                        read_data = self.read(self.in_waiting)
+                        self._print("In input buffer %d bytes" % len(read_data))
+                        print("In input buffer %d bytes" % len(read_data), read_data.hex(" ").upper())
                     try:
                         self.read(self.in_waiting)
                         self.write(data_to_send)
@@ -196,7 +196,7 @@ class MimRS485Device(serial.Serial):
                         if timeout >= self.read_timeout:
                             break
                         try:
-                            read_data = self.read(128)
+                            read_data = self.read(1024)
                             self._print("Receive data: ", read_data)
                         except (TypeError, serial.serialutil.SerialException, AttributeError) as error:
                             self.state = -3
@@ -217,6 +217,7 @@ class MimRS485Device(serial.Serial):
                                         self.answer_data.append(read_data)
                                         self.last_answer_data = read_data
                                         read_data = b""
+                                        break
                                     else:
                                         buf = read_data
                                         read_data = bytearray(b"")
@@ -314,16 +315,17 @@ def bytes_array_to_str(bytes_array):
 
 
 if __name__ == "__main__":
-    mim_ma = MimRS485Device(alias="MA", serial_numbers=["A50285"], debug=True)
-    mim_mfr = MimRS485Device(alias="MFR", port="COM30", debug=True)
+    mim_ma = MimRS485Device(alias="MA", serial_numbers=["A50285"], debug=False)
+    # mim_mfr = MimRS485Device(alias="MFR", port="COM30", debug=True)
     mim_ma.open_id()
     mim_ma.debug = False
-    mim_mfr.open_port()
-    mim_mfr.debug = False
-    interface_list = [mim_ma, mim_mfr]
+    # mim_mfr.open_port()
+    # mim_mfr.debug = False
+    interface_list = [mim_ma]
+    debug=True
     # Проверка команды зеркала
     for int in interface_list:
-        for k in range(10):
+        for k in range(1):
             print(get_time(), f"{int.alias}: tx_data {(int.request(addr=0x0C, id=0, mode='data').hex(' ').upper())}")
             while int.ready_to_transaction is False:
                 pass
