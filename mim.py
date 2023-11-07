@@ -8,11 +8,11 @@ from crc import Calculator, Crc8
 
 class MimRS485Device(serial.Serial):
     def __init__(self, **kw):
-        serial.Serial.__init__(self)
+        serial.Serial.__init__(self, parity = serial.PARITY_EVEN)
         #
         self.serial_numbers = kw.get("serial_numbers", [])  # это лист возможных серийников!!! (не строка)
         self.baudrate = kw.get("baudrate", 921600)
-        self.timeout = kw.get("timeout", 0.005)
+        self.timeout = kw.get("timeout", 0.002)
         self.port = kw.get('port', "COM0")
         self.debug = kw.get('debug', True)
         self.addr = kw.get("addr", 0x00)
@@ -20,7 +20,7 @@ class MimRS485Device(serial.Serial):
         #
         self.crc_calculator = Calculator(Crc8.CCITT)
         self.row_data = b""
-        self.read_timeout = 0.200
+        self.read_timeout = 0.3
         self.request_num = 0
         self.crc_check = True
 
@@ -173,12 +173,13 @@ class MimRS485Device(serial.Serial):
                         data_to_send = packet_to_send
                     if self.in_waiting:
                         read_data = self.read(self.in_waiting)
-                        self._print("In input buffer %d bytes" % len(read_data))
-                        print("In input buffer %d bytes" % len(read_data), read_data.hex(" ").upper())
+                        #self._print("In input buffer %d bytes" % len(read_data))
+                        #print(f"{self.alias} In input buffer {len(read_data)} bytes", read_data.hex(" ").upper())
                     try:
-                        self.read(self.in_waiting)
+                        #self.read(self.in_waiting)
                         self.write(data_to_send)
                         self._print("Send packet: ", data_to_send.hex(" ").upper())
+                        step_num = 0
                         nansw = 1
                     except serial.serialutil.SerialException as error:
                         self.state = -3
@@ -190,36 +191,44 @@ class MimRS485Device(serial.Serial):
                     buf = bytearray(b"")
                     read_data = bytearray(b"")
                     time_start = time.perf_counter()
+                    cnter = 0
                     while 1:
                         time.sleep(0.001)
+                        step_num += 1
                         timeout = time.perf_counter() - time_start
                         if timeout >= self.read_timeout:
                             break
                         try:
                             read_data = self.read(1024)
-                            self._print("Receive data: ", read_data)
+                            #self._print("Receive data: ", read_data)
                         except (TypeError, serial.serialutil.SerialException, AttributeError) as error:
                             self.state = -3
-                            self._print("Receive error: ", error)
+                            #self._print("Receive error: ", error)
                             pass
                         if read_data:
-                            self._print("Receive data with timeout <%.3f>: " % self.timeout, read_data.hex(" ").upper())
+                            self._print("Receive data (%d) with timeout <%.3f>: " % (len(read_data), self.timeout), read_data.hex(" ").upper())
                             with self.log_lock:
                                 self.serial_log_buffer.append(get_time() + read_data.hex(" ").upper())
                             read_data = buf + bytes(read_data)  # прибавляем к новому куску старый кусок
-                            self._print("Data to process: ", read_data.hex(" ").upper())
+                            #self._print("Data to process: ", read_data.hex(" ").upper())
                             if len(read_data) >= 6:
                                 if read_data[0] == 0xF0:
-                                    data_len = read_data[5]
-                                    if len(read_data) >= data_len + 5:  # проверка на достаточную длину приходящего пакета
+                                    data_len = int.from_bytes(read_data[4:6], "big")
+                                    # print(f"{self.alias} N={step_num}: expected = {data_len + 6 + 2} ({int.from_bytes(read_data[4:6], 'big')} 0x{read_data[4:6].hex(' ').upper()}), real_len = {len(read_data)}")
+                                    if len(read_data) == data_len + 6 + 2:  # проверка на достаточную длину приходящего пакета
                                         nansw -= 1
                                         self.state = 1
                                         self.answer_data.append(read_data)
                                         self.last_answer_data = read_data
                                         read_data = b""
                                         break
+                                    elif len(read_data) > (data_len + 6 + 2):
+                                        buf = read_data
+                                        # print(f"{self.alias}: {buf.hex(' ').upper()}")
+                                        read_data = bytearray(b"")
                                     else:
                                         buf = read_data
+                                        # print(f"{self.alias}: {buf.hex(' ').upper()}")
                                         read_data = bytearray(b"")
                                 else:
                                     buf = read_data[1:]
