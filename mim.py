@@ -147,6 +147,23 @@ class MimRS485Device(serial.Serial):
         frame.append(0x0F)
         #
         return bytes(frame)
+    
+    def check_frame(self, fr=[]):
+        if fr is None:
+            return 0
+        if fr[0] == 0xF0 and fr[-1] == 0x0F:
+            frame_len = len(fr)
+            if frame_len >= 9:
+                data_len = int.from_bytes(fr[4:6], "big")
+                crc = self.crc_calculator.checksum(bytes(fr[1:-2]))
+                if crc == fr[-2]:
+                    return 1
+                else:
+                    return -3
+            else:
+                return -2
+        else:
+            return -1
 
     def request(self, addr=0x0C, id=0, mode="cmd", data=None):
         tx_frame = bytes(self.form_frame(addr=addr, id=id, mode=mode, data=data))
@@ -305,8 +322,8 @@ def get_time():
     return time.strftime("%H-%M-%S", time.localtime()) + "." + ("%.3f:" % time.perf_counter()).split(".")[1]
 
 
-def str_to_list(send_str):  # функция, которая из последовательности шестнадцатиричных слов в строке без
-    send_list = []  # идентификатора 0x делает лист шестнадцатиричных чисел
+def str_to_list(send_str):  # функция, которая из последовательности шестнадцатеричных слов в строке без
+    send_list = []  # идентификатора 0x делает лист шестнадцатеричных чисел
     send_str = send_str.split(' ')
     for i, ch in enumerate(send_str):
         send_str[i] = ch
