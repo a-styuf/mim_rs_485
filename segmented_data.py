@@ -26,18 +26,16 @@ class Segmented_Data_Frame:
         )
         self.crc_calculator = Calculator(config)
         #
-        self.row_data = [
-            (self.label >> 8) & 0xFF,
-            (self.label >> 0) & 0xFF,
-            (self.seq_num >> 8) & 0xFF,
-            (self.seq_num >> 0) & 0xFF,
-            self.segm_vol & 0xFF,
-            self.segm_num & 0xFF,
-            self.data_len & 0xFF,
-        ] + self.data
+        self.row_data = b""
+        self.row_data += int.to_bytes(self.label,       2, byteorder="little", signed=False)
+        self.row_data += int.to_bytes(self.seq_num,     2, byteorder="little", signed=False)
+        self.row_data += int.to_bytes(self.segm_vol,    1, byteorder="little", signed=False)
+        self.row_data += int.to_bytes(self.segm_num,    1, byteorder="little", signed=False)
+        self.row_data += int.to_bytes(self.data_len,    1, byteorder="little", signed=False)
+        self.row_data += bytes(self.data)
         #
         self.crc8 = self.crc_calculator.checksum(bytes(self.row_data))
-        self.row_data.append(self.crc8)
+        self.row_data += int.to_bytes(self.crc8,    1, byteorder="little", signed=False)
 
 
 def segmented_data_data_list(id=65, seq_num=0, data=[]):
@@ -50,5 +48,4 @@ def segmented_data_data_list(id=65, seq_num=0, data=[]):
         frame = Segmented_Data_Frame(seq_num = seq_num, segm_vol = (data_len//id_data_len) + 1, segm_num = step, data=frame_data)
         data_list.append(frame.row_data)
         step += 1
-        print(step, frame.data_len)
     return data_list
