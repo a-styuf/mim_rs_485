@@ -4,16 +4,16 @@ class Tx_Data:
     def __init__(self, **kw):
         self.module = kw.get("module", 0x01)
         #
-        self.bw = kw.get("bw", 8) 	                # ISM : 6..9                   
-        self.sf = kw.get("sf", 10)  		        # ISM : 6..12                  
+        self.bw = kw.get("bw", 7) 	                # ISM : 6..9                   
+        self.sf = kw.get("sf", 9)  		        # ISM : 6..12                  
         self.cr = kw.get("cr", 1)  		            # ISM : 1..4 : 4/5..4/8        
         self.crc_ = kw.get("crc", 1)  	            # ISM : 0 or 1                 
-        self.ldr = kw.get("ldr", 1) 		        # ISM : 0 or 1                 
+        self.ldr = kw.get("ldr", 0) 		        # ISM : 0 or 1                 
         self.sync = kw.get("sync", 0x12)            # ISM : e.g.  0x12             
         self.r_freq = kw.get("r_freq", 868_000_000)  	# ISM : 861000000..1020000000  
         self.f_pwr = kw.get("f_pwr", 0)              # ISM : 0..15 : min..max
         #
-        self.packet_type    = 0x02
+        self.packet_type    = 0x03
         self.packet_size    = 0x00
         self.n_immediate    = 0x00
         self.time_stamp     = 0x00
@@ -59,3 +59,59 @@ class Tx_Data:
                 raise(ValueError, f"pay_load too long: expected length less or equal then 256, real length is {len(pay_load)}")
         else:
             raise(ValueError, f"pay_load is absent")
+        
+class Tx_Cfg:
+    def __init__(self, **kw):
+        self.module = kw.get("module", 0x01)
+        #
+        self.packet_type    = 1
+        self.packet_size    = 6
+        
+    def form_packet(self):
+        #
+        packet = b""
+        # 
+        packet += int.to_bytes(self.packet_type,    2, byteorder="little", signed=False)
+        packet += int.to_bytes(self.packet_size,    2, byteorder="little", signed=False)
+        packet += int.to_bytes(self.module,         1, byteorder="little", signed=False)
+        packet += int.to_bytes(0x00,                1, byteorder="little", signed=False)
+        #
+        return packet
+
+class Rx_Cfg:
+    def __init__(self, **kw):
+        self.module = kw.get("module", 0x01)
+        #
+        self.packet_type    = 0x11
+        self.packet_size    = 6
+        
+    def form_packet(self):
+        #
+        packet = b""
+        # 
+        packet += int.to_bytes(self.packet_type,    2, byteorder="little", signed=False)
+        packet += int.to_bytes(self.packet_size,    2, byteorder="little", signed=False)
+        packet += int.to_bytes(self.module,         1, byteorder="little", signed=False)
+        packet += int.to_bytes(0x00,                1, byteorder="little", signed=False)
+        #
+        return packet
+
+class Settings_Cmd:
+    def __init__(self, **kw):
+        self.cmd_num   = kw.get("num", 0x01)
+        self.parameter   = kw.get("param", [])
+        #
+        self.label          = 0xABBC
+        
+    def form_packet(self):
+        #
+        packet = b""
+        # 
+        packet += int.to_bytes(self.label,    2, byteorder="little", signed=False)
+        packet += int.to_bytes(self.cmd_num,    2, byteorder="little", signed=False)
+        param_list = self.parameter
+        while len(param_list) < 12:
+            param_list.append(0)
+        packet += bytes(param_list)
+        #
+        return packet

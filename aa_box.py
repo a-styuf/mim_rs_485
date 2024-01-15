@@ -1,4 +1,5 @@
 from sx127x_gs.radio_controller import RadioController
+import random
 
 """        
     self.modulation: SX127x_Modulation = kwargs.get('modulation', SX127x_Modulation.LORA)
@@ -19,5 +20,6 @@ from sx127x_gs.radio_controller import RadioController
 """
 
 radio = RadioController(interface="Serial")
-if radio.connect('COM32'):
-    radio.user_cli()
+if radio.connect('COM41'):
+    radio.send_repeat(bytes([0x03,  0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x89]), 5.0, max_retries=-1)
+    # radio.user_cli()
