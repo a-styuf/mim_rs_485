@@ -41,6 +41,7 @@ class MainWindow(QtWidgets.QMainWindow, live_button_win.Ui_MainWindow):
         self.load_init_cfg()
         self.COMPortLEdit.setText(self.mim.port)
         self.SerialNumEntry.setText(self.mim.serial_numbers[-1])
+        self.pollingIntervalDSBox.setValue(0.8)
 
         self.last_cursor = QtGui.QTextCursor.Start
 
@@ -63,6 +64,7 @@ class MainWindow(QtWidgets.QMainWindow, live_button_win.Ui_MainWindow):
         # timeout
         self.timeoutTimer = QtCore.QTimer()
         self.timeoutTimer.timeout.connect(self.timeout)
+        self.timeout_flag = False
 
 
         # потоки общения с прибором
@@ -185,9 +187,10 @@ class MainWindow(QtWidgets.QMainWindow, live_button_win.Ui_MainWindow):
                 text = self.log_queue.get()
                 self.LogTEdit.append(text)
                 self.find_str(self.live_buttons_pattern.hex(" "))
-                if not self.timeoutTimer.isActive():
+                if self.timeout_flag is False:
                     if self.live_buttons_pattern.hex(" ") in text:
-                        self.timeoutTimer.singleShot(4000, self.timeout)
+                        self.timeoutTimer.singleShot(5000, self.timeout)
+                        self.timeout_flag = True
                         self.live_buttons_event_num += 1
                         if self.viewAlertChBox.isChecked():
                             self.alert_win.show()
@@ -197,6 +200,7 @@ class MainWindow(QtWidgets.QMainWindow, live_button_win.Ui_MainWindow):
         pass
 
     def timeout(self):
+        self.timeout_flag = False
         pass
 
     def load_init_cfg(self):
