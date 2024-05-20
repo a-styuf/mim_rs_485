@@ -100,7 +100,7 @@ class MainWindow(QtWidgets.QMainWindow, live_button_win.Ui_MainWindow):
         pass
 
     def set_defaults(self):
-        modules = [i for i in range(13)]
+        modules = [i for i in range(14)]
         for module in modules:
             item = MIM_RS485_MAP(alias="apply cfg", addr=0x0C, id=3, flag="cmd", data=cg.Settings_Cmd(num=2, param=[module, 0]).form_packet())
             try:

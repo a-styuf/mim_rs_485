@@ -99,6 +99,10 @@ rx_turn_on_id_list = [
     MIM_RS485_MAP(alias="apply cfg",          addr=0x0C, id= 3, flag="cmd", data=cg.Settings_Cmd(num=2, param=[10, 0]).form_packet()),
 ]
 
+turn_on_10th_moduleid_list = [
+    MIM_RS485_MAP(alias="apply cfg",          addr=0x0C, id= 3, flag="cmd", data=cg.Settings_Cmd(num=2, param=[9, 0]).form_packet()),
+]
+
 cmd_test_id_list = [
     MIM_RS485_MAP(alias="resp_cfg",          addr=0x0C, id= 3, flag="cmd", data=cg.Settings_Cmd(num=1, param=[0x00, 0x00]).form_packet()),
     MIM_RS485_MAP(alias="resp_cfg",          addr=0x0C, id= 3, flag="cmd", data=cg.Settings_Cmd(num=1, param=[0x00, 0x00]).form_packet()),
@@ -124,6 +128,10 @@ time_stamp_test_id_list = [MIM_RS485_MAP(   alias="time_set",
                                             flag="cmd", 
                                             data=bytes.fromhex("B7 1D 77 65 9E 1C")
                                             )]
+
+# ma like polling
+ma_polling_id_list =    []
+ma_polling_id_list += [ MIM_RS485_MAP(alias="rx_polling",        addr=0x0C, id= 22, flag="data", data=None)]
 
 # mrf like polling
 mrf_polling_id_list =    []

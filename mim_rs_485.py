@@ -5,6 +5,7 @@ from threading import Thread, Lock
 import segmented_data
 from transaction_list import *
 from loguru import logger
+from sx127x_gs.radio_controller import RadioController
 
 WORK_TIME       = 1800        # s
 LIST_INTERVAL   = 1.0         # s
@@ -52,8 +53,13 @@ if __name__ == "__main__":
     start_time = time.perf_counter()
     logger.info(f"Начало тестирования интерфейсов")
     #
+    # radio = RadioController(interface="Serial")
+    # radio.connect('COM41')
+    # radio.send_single([0, 0])
+    # time.sleep(2.0)
+    #
     mim_ma = mim.MimRS485Device(alias="MA", addr=0x03, serial_numbers=["A50285"], debug=True)
-    mim_mfr = mim.MimRS485Device(alias="MFR", addr=0x01, port="COM40", debug=True)
+    mim_mfr = mim.MimRS485Device(alias="MFR", addr=0x01, port="COM47", debug=True)
     # mim_ma.open_id()
     # mim_ma.debug = False
     # mim_mfr.open_id()
@@ -64,15 +70,30 @@ if __name__ == "__main__":
     # потоки тестирования
     print_lock = Lock()
     t_ma = Thread(target = interface_test, args = (interface_list[0], ma_id_list, print_lock, 1.0, 1.0, 1.0), daemon=True)
-    t_mrf = Thread(target = interface_test, args = (interface_list[1], rx_turn_on_id_list, print_lock, 1.0, 1.0, 1.0), daemon=True)
     # t_ma.start()
     logger.info(f"Инициализация")
+    t_mrf = Thread(target = interface_test, args = (interface_list[1], turn_on_10th_moduleid_list, print_lock, 1.0, 1.0, 1.0), daemon=True)
     t_mrf.start()
     t_mrf.join()
+    #
+    # time.sleep(5.0)
+    # radio.send_single([0, 1, 2, 3])
+    # time.sleep(5.0)
     #
     logger.info(f"Запуск опроса")
-    t_mrf = Thread(target = interface_test, args = (interface_list[1], mrf_polling_id_list, print_lock, WORK_TIME, LIST_INTERVAL, CMD_INTERVAL), daemon=True)
+    t_mrf = Thread(target = interface_test, args = (interface_list[1], ma_polling_id_list, print_lock, 1.0, 0.2, 0.2), daemon=True)
     t_mrf.start()
     t_mrf.join()
     #
-    logger.info(f"Тестирование окончено за {(time.perf_counter() - start_time):.3f}")    
+    logger.info(f"Ожидание 8-ми минут")
+    time.sleep(8*60)
+    #
+    # radio.send_single([5, 6, 7, 8])
+    # time.sleep(5.0)
+    #
+    logger.info(f"Запуск опроса")
+    t_mrf = Thread(target = interface_test, args = (interface_list[1], ma_polling_id_list, print_lock, 1.0, 0.2, 0.2), daemon=True)
+    t_mrf.start()
+    t_mrf.join()
+    #
+    logger.info(f"Тестирование окончено за {(time.perf_counter() - start_time):.3f}")
