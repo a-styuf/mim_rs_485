@@ -27,16 +27,16 @@ class MainWindow(QtWidgets.QMainWindow, live_button_win.Ui_MainWindow):
         self.setWindowTitle("Регистратор событий \"Кнопка жизни\"")
 
         #
-        self.live_buttons_pattern = bytes.fromhex("03 00 00 00 00 00 00 89")
+        self.live_buttons_pattern = bytes.fromhex(" 77 00 00 00 00 00 00 33 ")
         self.live_buttons_event_num = 0
 
         # всплывающее окно
         self.alert_win = alert_win.Widget()
 
         # подключаемые модули
-        self.mim = mim.MimRS485Device(alias="MIM", addr=0x01, serial_numbers=["A50285"], debug=False)
+        self.mim = mim.MimRS485Device(alias="MIM", addr=0x00, serial_numbers=["A50285"], debug=True)
         self.logger = logger
-        self.logger.add("logs\Live_Buttons_log_{time}.log", rotation="1 hours")
+        self.logger.add("logs\\Live_Buttons_log_{time}.log", rotation="1 hours")
 
         self.load_init_cfg()
         self.COMPortLEdit.setText(self.mim.port)
@@ -102,7 +102,10 @@ class MainWindow(QtWidgets.QMainWindow, live_button_win.Ui_MainWindow):
     def set_defaults(self):
         modules = [i for i in range(14)]
         for module in modules:
-            item = MIM_RS485_MAP(alias="apply cfg", addr=0x0C, id=3, flag="cmd", data=cg.Settings_Cmd(num=2, param=[module, 0]).form_packet())
+            if module == 11:
+                item = MIM_RS485_MAP(alias="apply cfg", addr=0x0C, id=21, flag="cmd", data=bytes.fromhex("13 00 46 01 0B 00 01 00 34 00 40 E3 CB 33 01 00 00 00 00 00 00 00 01 00 00 00 A0 86 01 00 01 00 00 00 40 0D 03 00 01 00 00 00 E0 93 04 00 01 00 00 00 60 79 FE FF 01 00 00 00 C0 F2 FC FF 01 00 00 00 20 6C FB FF 01 00 00 00 80 1A 06 00 01 09 07 00 A0 86 01 00 00 00 12 00 80 FD 9C 76 01 00 00 00 00 00 00 00 01 00 00 00 00 00 00 00 01 00 00 00 00 00 00 00 01 00 00 00 00 00 00 00 01 00 00 00 00 00 00 00 01 00 00 00 00 00 00 00 01 00 00 00 00 00 00 00 01 00 00 00 00 00 00 00 01 0A 07 00 00 00 00 00 00 00 12 00 80 FD 9C 76 01 00 00 00 00 00 00 00 01 00 00 00 00 00 00 00 01 00 00 00 00 00 00 00 01 00 00 00 00 00 00 00 01 00 00 00 00 00 00 00 01 00 00 00 00 00 00 00 01 00 00 00 00 00 00 00 01 00 00 00 00 00 00 00 01 0A 07 00 00 00 00 00 00 00 12 00 80 FD 9C 76 01 00 00 00 00 00 00 00 01 00 00 00 00 00 00 00 01 00 00 00 00 00 00 00 01 00 00 00 00 00 00 00 01 00 00 00 00 00 00 00 01 00 00 00 00 00 00 00 01 00 00 00 00 00 00 00 01 00 00 00 00 00 00 00 01 0A 07 00 00 00 00 00"))
+            else:
+                item = MIM_RS485_MAP(alias="apply cfg", addr=0x0C, id=3, flag="cmd", data=cg.Settings_Cmd(num=2, param=[module, 0]).form_packet())
             try:
                 self.mim_queue.put(item, block=False, timeout=None)
             except Empty:
@@ -151,7 +154,7 @@ class MainWindow(QtWidgets.QMainWindow, live_button_win.Ui_MainWindow):
                 #
                 rx_frame = mim.get_last_data()
                 if rx_frame:
-                    log_msg = f"{mim.alias}: rx_data {len(rx_frame)} (id={msg.id}) t={(time.perf_counter() - transaction_start):.3f} {(rx_frame.hex(' ').upper())} crc {mim.check_frame(fr=rx_frame)}"
+                    log_msg = f"{mim.alias}: rx_data {len(rx_frame)} (id={msg.id}) t={(time.perf_counter() - transaction_start):.3f} {(rx_frame.hex(' ').upper())} id <{mim.check_frame(fr=rx_frame)}>"
                     logger.info(log_msg), log_queue.put(log_msg)
                     pass
                 else:
@@ -186,15 +189,15 @@ class MainWindow(QtWidgets.QMainWindow, live_button_win.Ui_MainWindow):
             try:
                 text = self.log_queue.get()
                 self.LogTEdit.append(text)
-                self.find_str(self.live_buttons_pattern.hex(" "))
-                if self.timeout_flag is False:
-                    if self.live_buttons_pattern.hex(" ") in text:
-                        self.timeoutTimer.singleShot(5000, self.timeout)
-                        self.timeout_flag = True
-                        self.live_buttons_event_num += 1
-                        if self.viewAlertChBox.isChecked():
-                            self.alert_win.show()
-                            self.alert_win.label_value_change(self.live_buttons_event_num)
+                if self.find_str(self.live_buttons_pattern.hex(" ")):
+                    if self.timeout_flag is False:
+                        if self.live_buttons_pattern.hex(" ") in text:
+                            self.timeoutTimer.singleShot(5000, self.timeout)
+                            self.timeout_flag = True
+                            self.live_buttons_event_num += 1
+                            if self.viewAlertChBox.isChecked():
+                                self.alert_win.show()
+                                self.alert_win.label_value_change(self.live_buttons_event_num)
             except Empty:
                 pass
         pass

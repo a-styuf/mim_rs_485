@@ -1,0 +1,14 @@
+{
+    "cSpell.words": [
+        "ccitt",
+        "loguru",
+        "nansw",
+        "orangered",
+        "seagreen",
+        "serialutil"
+    ],
+    "python.analysis.extraPaths": [
+        "./data_vis",
+        "./visual"
+    ]
+}

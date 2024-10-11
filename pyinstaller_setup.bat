@@ -1,3 +1,3 @@
-pyinstaller main.py --clean --onefile --name cm_luna
+pyinstaller live_button.py --clean --onefile --name live_button
 
 pause

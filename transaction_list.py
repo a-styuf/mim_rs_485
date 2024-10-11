@@ -54,9 +54,13 @@ mfr_id_list = [
 ]
 
 ma_id_list = [
-    MIM_RS485_MAP(alias="short_tmi",        addr=0x0C, id= 0, flag="data", data=None),
+    # MIM_RS485_MAP(alias="switch off pwr ch", addr=0x0C, id= 3, flag="cmd", data=cg.Settings_Cmd(num=1, param=[0x3F, 0xfA]).form_packet()),
+    MIM_RS485_MAP(alias="short tmi",        addr=0x0C, id= 0, flag="data", data=None),
     MIM_RS485_MAP(alias="tmi",              addr=0x0C, id= 1, flag="data", data=None),
+    MIM_RS485_MAP(alias="system tmi",       addr=0x0C, id= 4, flag="data", data=None),
 ]
+
+tmi_rd_100_times_list = [ MIM_RS485_MAP(alias="tmi", addr=0x0C, id= 1, flag="data", data=None) for i in range(100)]
 
 # id_list для тестирования сегментированных данных
 full_data = [(i & 0xFF) for i in range(100)]
@@ -93,14 +97,13 @@ get_tx_cfg_id_list = [
 
 # turn on receivers with default settings
 rx_turn_on_id_list = [
-    MIM_RS485_MAP(alias="apply cfg",          addr=0x0C, id= 3, flag="cmd", data=cg.Settings_Cmd(num=2, param=[1, 0]).form_packet()),
-    MIM_RS485_MAP(alias="apply cfg",          addr=0x0C, id= 3, flag="cmd", data=cg.Settings_Cmd(num=2, param=[8, 0]).form_packet()),
-    MIM_RS485_MAP(alias="apply cfg",          addr=0x0C, id= 3, flag="cmd", data=cg.Settings_Cmd(num=2, param=[9, 0]).form_packet()),
-    MIM_RS485_MAP(alias="apply cfg",          addr=0x0C, id= 3, flag="cmd", data=cg.Settings_Cmd(num=2, param=[10, 0]).form_packet()),
+    MIM_RS485_MAP(alias="ism_pwr_n",          addr=0x0C, id= 3, flag="cmd", data=cg.Settings_Cmd(num=1, param=[0x01, 0x1E]).form_packet()),
+    MIM_RS485_MAP(alias="ism_pwr_off",          addr=0x0C, id= 3, flag="cmd", data=cg.Settings_Cmd(num=1, param=[0x01, 0x00]).form_packet()),
+    MIM_RS485_MAP(alias="apply_cfg",          addr=0x0C, id= 3, flag="cmd", data=cg.Settings_Cmd(num=2, param=[9, 0]).form_packet())
 ]
 
-turn_on_10th_moduleid_list = [
-    MIM_RS485_MAP(alias="apply cfg",          addr=0x0C, id= 3, flag="cmd", data=cg.Settings_Cmd(num=2, param=[9, 0]).form_packet()),
+turn_on_10th_module_id_list = [
+    MIM_RS485_MAP(alias="apply cfg",          addr=0x0C, id= 3, flag="cmd", data=cg.Settings_Cmd(num=1, param=[9, 0]).form_packet())
 ]
 
 cmd_test_id_list = [
