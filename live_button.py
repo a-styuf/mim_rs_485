@@ -1,8 +1,8 @@
 import sys
-from PyQt5 import QtWidgets, QtCore, QtGui
-from PyQt5.QtWidgets import QApplication, QDialog, QMainWindow, QMessageBox, QPushButton
-from PyQt5.QtCore import Qt
-from PyQt5.QtGui import QColor, QBrush
+from PyQt6 import QtWidgets, QtCore, QtGui
+from PyQt6.QtWidgets import QApplication, QDialog, QMainWindow, QMessageBox, QPushButton
+from PyQt6.QtCore import Qt
+from PyQt6.QtGui import QColor, QBrush
 import live_button_win
 import time
 import os
@@ -14,6 +14,8 @@ from queue import Queue, Empty
 from loguru import logger
 import alert_win
 import json
+import re
+from datetime import datetime, timedelta, timezone
 
 
 class MainWindow(QtWidgets.QMainWindow, live_button_win.Ui_MainWindow):
@@ -43,7 +45,7 @@ class MainWindow(QtWidgets.QMainWindow, live_button_win.Ui_MainWindow):
         self.SerialNumEntry.setText(self.mim.serial_numbers[-1])
         self.pollingIntervalDSBox.setValue(0.8)
 
-        self.last_cursor = QtGui.QTextCursor.Start
+        self.last_cursor = QtGui.QTextCursor.MoveOperation.Start
 
         # обработка кнопок
         self.COMPortOpenPButt.clicked.connect(self.open_by_port)
@@ -79,10 +81,11 @@ class MainWindow(QtWidgets.QMainWindow, live_button_win.Ui_MainWindow):
                                     self.logger),
                                 daemon=True)
         self.t_polling.start()
+        #
 
     # polling
     def polling_start(self):
-        self.pollingStartPButt.setStyleSheet("background-color: " + "palegreen")
+        self.pollingStartPButt.setStyleSheet("background-color: " + "#1E4D31")
         interval = int(self.pollingIntervalDSBox.value()*1000)
         self.pollingTimer.start(interval)
         pass
@@ -95,7 +98,7 @@ class MainWindow(QtWidgets.QMainWindow, live_button_win.Ui_MainWindow):
         pass
 
     def polling_stop(self):
-        self.pollingStartPButt.setStyleSheet("background-color: " + "lightGray")
+        self.pollingStartPButt.setStyleSheet("background-color: " + "palette(Button)")
         self.pollingTimer.stop()
         pass
 
@@ -103,7 +106,7 @@ class MainWindow(QtWidgets.QMainWindow, live_button_win.Ui_MainWindow):
         modules = [i for i in range(14)]
         for module in modules:
             if module == 11:
-                item = MIM_RS485_MAP(alias="apply cfg", addr=0x0C, id=21, flag="cmd", data=bytes.fromhex("13 00 46 01 0B 00 01 00 34 00 40 E3 CB 33 01 00 00 00 00 00 00 00 01 00 00 00 A0 86 01 00 01 00 00 00 40 0D 03 00 01 00 00 00 E0 93 04 00 01 00 00 00 60 79 FE FF 01 00 00 00 C0 F2 FC FF 01 00 00 00 20 6C FB FF 01 00 00 00 80 1A 06 00 01 09 07 00 A0 86 01 00 00 00 12 00 80 FD 9C 76 01 00 00 00 00 00 00 00 01 00 00 00 00 00 00 00 01 00 00 00 00 00 00 00 01 00 00 00 00 00 00 00 01 00 00 00 00 00 00 00 01 00 00 00 00 00 00 00 01 00 00 00 00 00 00 00 01 00 00 00 00 00 00 00 01 0A 07 00 00 00 00 00 00 00 12 00 80 FD 9C 76 01 00 00 00 00 00 00 00 01 00 00 00 00 00 00 00 01 00 00 00 00 00 00 00 01 00 00 00 00 00 00 00 01 00 00 00 00 00 00 00 01 00 00 00 00 00 00 00 01 00 00 00 00 00 00 00 01 00 00 00 00 00 00 00 01 0A 07 00 00 00 00 00 00 00 12 00 80 FD 9C 76 01 00 00 00 00 00 00 00 01 00 00 00 00 00 00 00 01 00 00 00 00 00 00 00 01 00 00 00 00 00 00 00 01 00 00 00 00 00 00 00 01 00 00 00 00 00 00 00 01 00 00 00 00 00 00 00 01 00 00 00 00 00 00 00 01 0A 07 00 00 00 00 00"))
+                item = MIM_RS485_MAP(alias="apply cfg", addr=0x0C, id=21, flag="cmd", data=bytes.fromhex("13 00 46 01 06 00 01 00 12 00 00 A1 BC 33 01 00 00 00 00 00 00 00 00 00 00 00 A8 61 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 0A 07 00 00 00 00 00 00 00 12 00 00 A1 BC 33 01 00 00 00 00 00 00 00 01 00 00 00 00 00 00 00 01 00 00 00 00 00 00 00 01 00 00 00 00 00 00 00 01 00 00 00 00 00 00 00 01 00 00 00 00 00 00 00 01 00 00 00 00 00 00 00 01 00 00 00 00 00 00 00 01 0A 07 00 00 00 00 00 00 00 12 00 00 A1 BC 33 01 00 00 00 00 00 00 00 01 00 00 00 00 00 00 00 01 00 00 00 00 00 00 00 01 00 00 00 00 00 00 00 01 00 00 00 00 00 00 00 01 00 00 00 00 00 00 00 01 00 00 00 00 00 00 00 01 00 00 00 00 00 00 00 01 0A 07 00 00 00 00 00 00 00 34 00 00 A1 BC 33 01 00 00 00 00 00 00 00 01 00 00 00 00 00 00 00 01 00 00 00 00 00 00 00 01 00 00 00 00 00 00 00 01 00 00 00 00 00 00 00 01 00 00 00 00 00 00 00 01 00 00 00 00 00 00 00 01 00 00 00 00 00 00 00 01 0A 07 00 00 00 00 00"))
             else:
                 item = MIM_RS485_MAP(alias="apply cfg", addr=0x0C, id=3, flag="cmd", data=cg.Settings_Cmd(num=2, param=[module, 0]).form_packet())
             try:
@@ -171,37 +174,59 @@ class MainWindow(QtWidgets.QMainWindow, live_button_win.Ui_MainWindow):
     def find_str(self, str_to_find):
         ret_val = False
         self.LogTEdit.moveCursor(self.last_cursor)
-        self.LogTEdit.moveCursor(QtGui.QTextCursor.End, QtGui.QTextCursor.KeepAnchor)
-        self.LogTEdit.setTextBackgroundColor(QtGui.QColor("white"))
-        self.LogTEdit.setTextColor(QtGui.QColor("black"))
-        self.LogTEdit.moveCursor(QtGui.QTextCursor.Start)
+        self.LogTEdit.moveCursor(QtGui.QTextCursor.MoveOperation.End, QtGui.QTextCursor.MoveMode.KeepAnchor)
+        self.LogTEdit.setTextBackgroundColor(QtGui.QColor("palette(Base)"))
+        self.LogTEdit.setTextColor(QtGui.QColor("palette(Text)"))
+        self.LogTEdit.moveCursor(QtGui.QTextCursor.MoveOperation.Start)
         while self.LogTEdit.find(str_to_find):
-            self.LogTEdit.setTextBackgroundColor(QtGui.QColor("black"))
-            self.LogTEdit.setTextColor(QtGui.QColor("white"))
+            self.LogTEdit.setTextBackgroundColor(QtGui.QColor("palette(Text)"))
+            self.LogTEdit.setTextColor(QtGui.QColor("palette(Base)"))
             ret_val = True
             pass
-        self.LogTEdit.moveCursor(QtGui.QTextCursor.End)
-        self.last_cursor = QtGui.QTextCursor.End
+        self.LogTEdit.moveCursor(QtGui.QTextCursor.MoveOperation.End)
+        self.last_cursor = QtGui.QTextCursor.MoveOperation.End
         return ret_val
 
     def log_refresh(self):
         while not self.log_queue.empty():
             try:
                 text = self.log_queue.get()
+                logger.info(f"Received text to log window: {text}")
+                search_sos_result = self.get_sos_from_transport_frame(text)
+                if search_sos_result:
+                    start= text.find(search_sos_result[-1])
+                    text = text[:start] + "<font color=' SpringGreen ' size = 5>" + text[start:start+len(search_sos_result[-1])] + "</font>" + text[start+len(search_sos_result[-1]):]
+                #
                 self.LogTEdit.append(text)
-                if self.find_str(self.live_buttons_pattern.hex(" ")):
+                #
+                
+                #
+                if search_sos_result:
+                    time_b = bytes.fromhex(search_sos_result[-1])[2:]
+                    time_s = int.from_bytes(time_b, byteorder='little')
+                    datetime_from_seconds = datetime(1970, 1, 1, hour=7) + timedelta(seconds=time_s)
+                    #
                     if self.timeout_flag is False:
-                        if self.live_buttons_pattern.hex(" ") in text:
-                            self.timeoutTimer.singleShot(5000, self.timeout)
-                            self.timeout_flag = True
-                            self.live_buttons_event_num += 1
-                            if self.viewAlertChBox.isChecked():
-                                self.alert_win.show()
-                                self.alert_win.label_value_change(self.live_buttons_event_num)
+                        self.timeoutTimer.singleShot(2000, self.timeout)
+                        self.timeout_flag = True
+                        self.live_buttons_event_num += 1
+                        if self.viewAlertChBox.isChecked:
+                            self.alert_win.show()
+                            self.alert_win.label_value_change(self.live_buttons_event_num)
+                            self.alert_win.label2_value_change(f"{datetime_from_seconds}")
+                #
             except Empty:
                 pass
         pass
-
+    
+    def get_sos_from_transport_frame(self, text):
+        frame = re.compile(r"F0 00 0C [0-9A-F]{2} 00 3B (([0-9A-F]{2} ){0,59})(?P<sos>11 10 ([0-9A-F\s]{3}){4})(([0-9A-F]{2} ){0,59})([0-9A-F]{2} ){2}")
+        result = frame.findall(text)
+        return_val = []
+        for gr in result:
+            return_val.append(gr[2])
+        return return_val
+    
     def timeout(self):
         self.timeout_flag = False
         pass
@@ -236,4 +261,4 @@ if __name__ == '__main__':  # Если мы запускаем файл напр
     app = QtWidgets.QApplication(sys.argv)  # Новый экземпляр QApplication
     window = MainWindow()  # Создаём объект класса ExampleApp
     window.show()  # Показываем окно
-    app.exec_()  # и запускаем приложение
+    app.exec()  # и запускаем приложение

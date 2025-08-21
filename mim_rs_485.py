@@ -1,7 +1,7 @@
 import mim
 import time
 from threading import Thread, Lock
-from .transaction_list import *  # noqa: F403
+from transaction_list import *  # noqa: F403
 from loguru import logger
 from sx127x_gs.radio_controller import RadioController  # noqa: F401
 import pandas as pd
@@ -59,21 +59,31 @@ if __name__ == "__main__":
     start_time = time.perf_counter()
     logger.info(f"Начало тестирования интерфейсов")
     #
-    mim_ma= mim.MimRS485Device(alias="MA", addr=0x01, serial_numbers=["A50285"], debug=False)
-    mim_mfr = mim.MimRS485Device(alias="MFR", addr=0x02, port="COM40", debug=True)
-    # mim_ma.open_id()
-    # mim_ma.debug = False
+    mim_ma= mim.MimRS485Device(alias="MA", addr=0x01, serial_numbers=["AU05SM"], debug=True)
+    # mim_ma= mim.MimRS485Device(alias="MA", addr=0x01, port="COM10", debug=True)
+    mim_mfr = mim.MimRS485Device(alias="MFR", addr=0x02, port="COM12", debug=True)
     mim_ma.open_id()
+    mim_ma.debug = False
     # mim_ma.open_port()
-    # mim_mfr.debug = False
+    # mim_ma.debug = False
+    mim_mfr.open_port()
+    mim_mfr.debug = False
     #
-    interface_list = [mim_ma, mim_mfr]
+    interface_list = [mim_mfr, mim_ma]
     # потоки тестирования
     logger.info(f"Инициализация")
     print_lock = Lock()
     #
-    t_ma = Thread(target = interface_test, args = (interface_list[0], cmd_test_id_list, print_lock, 5.0, 0.0, 0.0), daemon=True)
-    t_ma.start()
-    t_ma.join()
+    input("Нажмите Enter для продолжения тестирования интерфейса МФР...")
+    logger.info("Тестирование интерфейса МФР")
+    t_mfr = Thread(target = interface_test, args = (interface_list[0], id_list, print_lock, 5.0, 0.0, 0.0), daemon=True)
+    t_mfr.start()
+    t_mfr.join()
+    
+    # input("Нажмите Enter для продолжения тестирования интерфейса МA...")
+    # logger.info("Тестирование интерфейса МA")
+    # t_ma = Thread(target = interface_test, args = (interface_list[1], id_list, print_lock, 5.0, 0.0, 0.0), daemon=True)
+    # t_ma.start()
+    # t_ma.join()
     #
-    logger.info(f"Тестирование окончено за {(time.perf_counter() - start_time):.3f}")
+    logger.info(f"Тестирование окончено за {(time.perf_counter() - start_time):.3f}") 

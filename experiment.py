@@ -137,9 +137,9 @@ if __name__ == "__main__":
     #
     exp = Experiment(mim=mim)
     #
-    step_num = 20000
+    step_num = 20
     period_s = 1
-    start_block = 16
+    start_block = 2
     frame_cnter_to_save = 1
     #
     time.sleep(1)
@@ -147,15 +147,21 @@ if __name__ == "__main__":
     time.sleep(1)
     exp.set_start_wr_settings(step_num=step_num, period_s=period_s, start_block=start_block, data_len=16, frame_cnter_to_save=frame_cnter_to_save)
     #
-    freq_list: list[int] = [    868000000, 863275000, 863450000, 863625000,\
-                                863800000, 863975000, 864325000, 864500000]
-    module_list: list[int] = [  9, 9, 9, 9,\
+    freq_list: list[int] = [
+                                863275000, 863275000, 863275000, 863275000,
+                                863275000, 863275000, 863275000, 863275000, 
+                                863275000, 863275000, 863275000, 863275000,
+                                863275000, 863275000, 863275000, 863275000
+                            ]
+    module_list: list[int] = [  9, 9, 9, 9,
+                                9, 9, 9, 9,
+                                9, 9, 9, 9,
                                 9, 9, 9, 9]
-    for num in range(8):    
+    for num in range(16):    
         time.sleep(0.1)
         exp.set_tx_msg(num=num, m_num=module_list[num], BW=7, SF=10, CR=1, CRC_=1, 
                                                         LDR=0, Sync=0x12, InvertIQ=0, RFreq=freq_list[num], 
-                                                        FPwr=1, PwrNoOn=0, Pleng=4)
+                                                        FPwr=num, PwrNoOn=0, Pleng=4)
     #
     time.sleep(0.1)
     exp.set_radio_module_to_default()

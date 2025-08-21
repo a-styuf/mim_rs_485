@@ -6,14 +6,16 @@ authors = ["a-styuf <a-styuf@yandex.ru>"]
 readme = "README.md"
 
 [tool.poetry.dependencies]
-python = "^3.11"
+python = ">=3.13, <3.15"
 matplotlib = "^3.9.2"
 loguru = "^0.7.2"
 bytes-parser = {git = "https://github.com/CrinitusFeles/BytesParser.git"}
 sx127x-gs = {git = "https://github.com/CrinitusFeles/SX127x_GS.git"}
 marathon-iot = {git = "https://github.com/OAI-NSU/Marathon_IoT.git"}
-pyqt6 = "^6.7.1"
 pyqtgraph = "^0.13.7"
+pyqt6 = "^6.8.0"
+pyserial = "^3.0"
+pyinstaller = "^6.15.0"
 
 
 [build-system]
