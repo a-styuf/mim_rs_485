@@ -85,7 +85,7 @@ class MainWindow(QtWidgets.QMainWindow, live_button_win.Ui_MainWindow):
 
     # polling
     def polling_start(self):
-        self.pollingStartPButt.setStyleSheet("background-color: " + "#1E4D31")
+        self.pollingStartPButt.setStyleSheet("background-color: " + "SpringGreen")
         interval = int(self.pollingIntervalDSBox.value()*1000)
         self.pollingTimer.start(interval)
         pass
@@ -103,10 +103,12 @@ class MainWindow(QtWidgets.QMainWindow, live_button_win.Ui_MainWindow):
         pass
 
     def set_defaults(self):
-        modules = [i for i in range(14)]
+        modules = [i for i in range(6)]
         for module in modules:
-            if module == 11:
+            if module == 5:
                 item = MIM_RS485_MAP(alias="apply cfg", addr=0x0C, id=21, flag="cmd", data=bytes.fromhex("13 00 46 01 06 00 01 00 12 00 00 A1 BC 33 01 00 00 00 00 00 00 00 00 00 00 00 A8 61 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 0A 07 00 00 00 00 00 00 00 12 00 00 A1 BC 33 01 00 00 00 00 00 00 00 01 00 00 00 00 00 00 00 01 00 00 00 00 00 00 00 01 00 00 00 00 00 00 00 01 00 00 00 00 00 00 00 01 00 00 00 00 00 00 00 01 00 00 00 00 00 00 00 01 00 00 00 00 00 00 00 01 0A 07 00 00 00 00 00 00 00 12 00 00 A1 BC 33 01 00 00 00 00 00 00 00 01 00 00 00 00 00 00 00 01 00 00 00 00 00 00 00 01 00 00 00 00 00 00 00 01 00 00 00 00 00 00 00 01 00 00 00 00 00 00 00 01 00 00 00 00 00 00 00 01 00 00 00 00 00 00 00 01 0A 07 00 00 00 00 00 00 00 34 00 00 A1 BC 33 01 00 00 00 00 00 00 00 01 00 00 00 00 00 00 00 01 00 00 00 00 00 00 00 01 00 00 00 00 00 00 00 01 00 00 00 00 00 00 00 01 00 00 00 00 00 00 00 01 00 00 00 00 00 00 00 01 00 00 00 00 00 00 00 01 0A 07 00 00 00 00 00"))
+            if module == 4:
+                item = MIM_RS485_MAP(alias="apply cfg", addr=0x0C, id=21, flag="cmd", data=bytes.fromhex("13 00 46 01 05 00 01 00 12 00 00 A1 BC 33 01 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 01 0A 07 00 00 00 00 00 00 00 12 00 00 A1 BC 33 01 00 00 00 00 00 00 00 01 00 00 00 00 00 00 00 01 00 00 00 00 00 00 00 01 00 00 00 00 00 00 00 01 00 00 00 00 00 00 00 01 00 00 00 00 00 00 00 01 00 00 00 00 00 00 00 01 00 00 00 00 00 00 00 01 0A 07 00 00 00 00 00 00 00 12 00 80 FD 9C 76 01 00 00 00 00 00 00 00 01 00 00 00 00 00 00 00 01 00 00 00 00 00 00 00 01 00 00 00 00 00 00 00 01 00 00 00 00 00 00 00 01 00 00 00 00 00 00 00 01 00 00 00 00 00 00 00 01 00 00 00 00 00 00 00 01 0A 07 00 00 00 00 00 00 00 12 00 80 FD 9C 76 01 00 00 00 00 00 00 00 01 00 00 00 00 00 00 00 01 00 00 00 00 00 00 00 01 00 00 00 00 00 00 00 01 00 00 00 00 00 00 00 01 00 00 00 00 00 00 00 01 00 00 00 00 00 00 00 01 00 00 00 00 00 00 00 01 0A 07 00 00 00 00 00"))
             else:
                 item = MIM_RS485_MAP(alias="apply cfg", addr=0x0C, id=3, flag="cmd", data=cg.Settings_Cmd(num=2, param=[module, 0]).form_packet())
             try:
@@ -195,7 +197,7 @@ class MainWindow(QtWidgets.QMainWindow, live_button_win.Ui_MainWindow):
                 search_sos_result = self.get_sos_from_transport_frame(text)
                 if search_sos_result:
                     start= text.find(search_sos_result[-1])
-                    text = text[:start] + "<font color=' SpringGreen ' size = 5>" + text[start:start+len(search_sos_result[-1])] + "</font>" + text[start+len(search_sos_result[-1]):]
+                    text = text[:start] + "<font color='#1E4D31' size = 5>" + text[start:start+len(search_sos_result[-1])] + "</font>" + text[start+len(search_sos_result[-1]):]
                 #
                 self.LogTEdit.append(text)
                 #
